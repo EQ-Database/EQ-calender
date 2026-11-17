@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EQ Calendar">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f4f1e8">
+<title>EQ Cultivation Calendar</title>
+<style>
+:root{
+  --paper:#f4f1e8; --card:#fffdf7; --ink:#26302a; --sub:#6b7268; --line:#d9d4c4;
+  --accent:#3f6b4f; --grow:#4f8a5f; --slow:#c79a3a; --rest:#8793a3;
+  --growbg:#dcebdd; --slowbg:#f3e6c4; --restbg:#e1e5ea; --danger:#a8483c;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#1b1f1c;--card:#252a26;--ink:#e9e6da;--sub:#a2a89d;--line:#3a413b;
+  --accent:#8fc3a0;--grow:#6fb383;--slow:#d9b25a;--rest:#9aa7b8;
+  --growbg:#2c4334;--slowbg:#4a3f22;--restbg:#343b45;--danger:#e08a7d;}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:16px;line-height:1.5}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+header.top{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--line);
+  padding:calc(env(safe-area-inset-top) + 10px) 16px 10px}
+header.top h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:19px;font-weight:600;letter-spacing:.02em}
+header.top p{margin:0;font-size:12px;color:var(--sub)}
+main{padding:14px 14px calc(env(safe-area-inset-bottom) + 90px);max-width:640px;margin:0 auto}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;border:0;background:none;padding:12px 4px 10px;font-size:13px;color:var(--sub);border-top:3px solid transparent}
+nav.tabs button.on{color:var(--accent);font-weight:700;border-top-color:var(--accent)}
+.monthbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.monthbar .m{font-family:Georgia,serif;font-size:26px;font-weight:600}
+.monthbar .m small{font-family:inherit;font-size:12px;color:var(--accent);margin-left:8px;font-weight:700}
+.rnd{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;display:block;width:100%;text-align:left}
+.card .nm{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:19px;font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700}
+.badge.grow{background:var(--growbg);color:var(--grow)}
+.badge.slow{background:var(--slowbg);color:var(--slow)}
+.badge.rest{background:var(--restbg);color:var(--rest)}
+.water{font-size:13px;color:var(--sub)}
+.water b{color:var(--ink);font-weight:600}
+.dots{letter-spacing:2px;color:var(--accent);margin-left:4px}
+.chip{display:inline-block;padding:2px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px}
+.note{margin-top:8px;font-size:14px;color:var(--sub);white-space:pre-wrap}
+.temp{font-size:12px;color:var(--sub);margin-left:auto}
+h2{font-size:14px;color:var(--sub);font-weight:700;margin:20px 0 8px;letter-spacing:.04em}
+table.mx{width:100%;border-collapse:separate;border-spacing:2px;table-layout:fixed}
+table.mx th{font-size:10px;color:var(--sub);font-weight:400;padding:0}
+table.mx th:first-child{width:36%}
+table.mx th.cur{color:var(--accent);font-weight:700}
+table.mx td.g{font-family:Georgia,serif;font-style:italic;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 4px;border-radius:6px}
+table.mx tr.sel td.g{background:var(--accent);color:var(--paper)}
+table.mx td.c{height:30px;border-radius:4px;text-align:center;font-size:10px;font-weight:700;padding:0}
+td.c.grow{background:var(--growbg);color:var(--grow)} td.c.slow{background:var(--slowbg);color:var(--slow)} td.c.rest{background:var(--restbg);color:var(--rest)}
+td.c.cur{outline:2px solid var(--accent);outline-offset:-2px}
+.legend{font-size:12px;color:var(--sub);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap}
+.mrow{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.mrow.cur{border-color:var(--accent);border-width:2px}
+.mrow .mn{font-family:Georgia,serif;font-size:17px;font-weight:600;width:44px;flex:none}
+.mrow .bd{flex:1;min-width:0}
+.mrow .row{margin-top:0}
+.mrow .note{margin-top:4px;font-size:13px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:var(--sub);margin-bottom:6px;font-weight:700}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:64px;min-height:44px;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 8px;font-size:14px}
+.seg button.on{background:var(--accent);border-color:var(--accent);color:var(--paper);font-weight:700}
+.seg.wrap button{flex:none}
+textarea,input[type=text],input[type=number]{width:100%;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:10px;font-size:16px}
+textarea{min-height:84px;resize:vertical}
+.btn{min-height:44px;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;font-size:15px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--paper);font-weight:700}
+.btn.dng{color:var(--danger);border-color:var(--danger)}
+.btn.full{width:100%;margin-bottom:8px}
+.sheetbg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--paper);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;
+  padding:16px 16px calc(env(safe-area-inset-bottom) + 16px)}
+.sheet h3{margin:0 0 2px;font-family:Georgia,serif;font-style:italic;font-size:20px}
+.sheet .sub{font-size:13px;color:var(--sub);margin-bottom:14px}
+.grp{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px}
+.grp .line{display:flex;gap:8px;align-items:center;margin-top:8px}
+.grp .line label{font-size:13px;color:var(--sub);flex:none}
+.grp .line input{width:84px}
+.hint{font-size:13px;color:var(--sub);margin:6px 0 12px}
+.msg{font-size:14px;color:var(--accent);margin:8px 0;min-height:1.4em}
+.empty{color:var(--sub);text-align:center;padding:40px 10px}
+</style>
+</head>
+<body>
+<header class="top"><h1>EQ Cultivation Calendar</h1><p id="tagline"></p></header>
+<main id="app"></main>
+<nav class="tabs" id="tabs"></nav>
+<div id="sheet"></div>
+<input type="file" id="file" accept="application/json,.json" hidden>
+
+<script>
+'use strict';
+var KEY = 'eq-calendar-v1';
+var TASKS = ['repot','sow','feed','pollinate','out','in','shade','pest'];
+var STATES = ['grow','slow','rest'];
+
+var T = {
+  ja: {
+    tagline:'属別の栽培カレンダー', tabNow:'今月', tabYear:'年間', tabSet:'設定',
+    thisMonth:'今月', grow:'生育', slow:'緩慢', rest:'休眠', g1:'生', s1:'緩', r1:'休',
+    water:'水やり', w0:'断水', w1:'少なめ', w2:'ふつう', w3:'多め',
+    repot:'植え替え', sow:'播種', feed:'施肥', pollinate:'交配', out:'屋外へ', 'in':'取り込み', shade:'遮光', pest:'防除',
+    minTemp:'最低', overview:'一覧', detail:'月ごとの内容', tapToEdit:'タップして編集',
+    state:'生育状態', tasks:'作業', note:'メモ', notePh:'自分の環境での気づきを書く', close:'閉じる',
+    lang:'表示言語', groups:'グループ(属・タイプ)', name:'名前', minTempL:'最低温度の目安(℃)',
+    add:'グループを追加', dup:'複製', del:'削除', newName:'新しいグループ', copyOf:'(複製)',
+    backup:'バックアップ', exportB:'バックアップを保存(JSON)', importB:'バックアップから復元',
+    reset:'初期値に戻す', confirmDel:'このグループを削除しますか?', confirmReset:'すべての内容を初期値に戻しますか?',
+    confirmImport:'現在の内容をバックアップの内容で置き換えますか?', saved:'バックアップを書き出しました', restored:'復元しました',
+    badFile:'このファイルは読み込めません', seedHint:'初期値は関東の無加温〜簡易加温を想定した一般的な目安です。自分の環境に合わせて書き換えてください。',
+    storeErr:'端末への保存に失敗しました。バックアップを保存してください。', empty:'グループがありません。設定から追加してください。',
+    months:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'],
+    short:['1','2','3','4','5','6','7','8','9','10','11','12']
+  },
+  en: {
+    tagline:'Cultivation calendar by genus', tabNow:'Now', tabYear:'Year', tabSet:'Settings',
+    thisMonth:'This month', grow:'Growing', slow:'Slow', rest:'Dormant', g1:'G', s1:'S', r1:'D',
+    water:'Water', w0:'None', w1:'Light', w2:'Normal', w3:'Heavy',
+    repot:'Repot', sow:'Sow', feed:'Feed', pollinate:'Pollinate', out:'Move out', 'in':'Bring in', shade:'Shade', pest:'Pest control',
+    minTemp:'Min', overview:'Overview', detail:'Month by month', tapToEdit:'Tap to edit',
+    state:'Growth', tasks:'Tasks', note:'Note', notePh:'Notes from your own conditions', close:'Close',
+    lang:'Language', groups:'Groups (genus / type)', name:'Name', minTempL:'Minimum temperature (°C)',
+    add:'Add group', dup:'Duplicate', del:'Delete', newName:'New group', copyOf:' (copy)',
+    backup:'Backup', exportB:'Save backup (JSON)', importB:'Restore from backup',
+    reset:'Reset to defaults', confirmDel:'Delete this group?', confirmReset:'Reset everything to the defaults?',
+    confirmImport:'Replace the current data with this backup?', saved:'Backup exported', restored:'Restored',
+    badFile:'This file cannot be read', seedHint:'Defaults are general guidance for an unheated or lightly heated greenhouse in the Kanto region. Rewrite them for your own conditions.',
+    storeErr:'Could not save to this device. Please save a backup.', empty:'No groups yet. Add one in Settings.',
+    months:['January','February','March','April','May','June','July','August','September','October','November','December'],
+    short:['J','F','M','A','M','J','J','A','S','O','N','D']
+  }
+};
+
+function m(state, water, tasks, note){ return {state:state, water:water, tasks:tasks||[], note:note||''}; }
+function uid(){ return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function seed(){
+  return { version:1, lang:'ja', groups:[
+    { id:'g-euph-s', name:'Euphorbia(夏型)', minTemp:'5', months:[
+      m('rest',0,[],'断水気味に。日中は日に当てる'), m('rest',0,[],''),
+      m('slow',1,[],'暖かい日の午前に少量から再開'), m('grow',2,['repot','out'],''),
+      m('grow',3,['repot','sow','feed'],''), m('grow',3,['sow','feed','pest'],''),
+      m('grow',2,['shade','pest'],'蒸れに注意。風を通す'), m('grow',2,['shade'],'水やりは夕方に'),
+      m('grow',3,['feed'],''), m('slow',2,[],'水を徐々に減らす'),
+      m('slow',1,['in'],'最低気温を見て取り込む'), m('rest',0,[],'') ]},
+    { id:'g-gast', name:'Gasteria', minTemp:'3', months:[
+      m('slow',1,[],''), m('slow',1,[],''),
+      m('grow',2,['repot'],''), m('grow',3,['repot','feed'],''),
+      m('grow',3,['feed','shade'],''), m('grow',2,['shade'],''),
+      m('slow',1,['shade'],'蒸れに注意。夕方に軽く'), m('slow',1,['shade'],''),
+      m('grow',2,['repot'],''), m('grow',3,['repot','feed','sow'],''),
+      m('grow',2,['in'],''), m('slow',1,[],'') ]},
+    { id:'g-haw', name:'Haworthia', minTemp:'3', months:[
+      m('slow',1,[],''), m('slow',1,[],''),
+      m('grow',2,['repot'],''), m('grow',3,['repot','feed'],''),
+      m('grow',3,['shade'],''), m('grow',2,['shade'],''),
+      m('slow',1,['shade'],'蒸れに注意。夕方に軽く'), m('slow',1,['shade'],''),
+      m('grow',2,['repot'],''), m('grow',3,['repot','feed','sow'],''),
+      m('grow',2,['in'],''), m('slow',1,[],'') ]}
+  ]};
+}
+
+function valid(d){
+  if(!d || !Array.isArray(d.groups)) return false;
+  for(var i=0;i<d.groups.length;i++){
+    var g=d.groups[i];
+    if(!g || typeof g.name!=='string' || !Array.isArray(g.months) || g.months.length!==12) return false;
+  }
+  return true;
+}
+function normalize(d){
+  d.version=1; if(d.lang!=='en') d.lang='ja';
+  d.groups.forEach(function(g){
+    if(!g.id) g.id=uid();
+    g.minTemp = g.minTemp==null ? '' : String(g.minTemp);
+    g.months = g.months.map(function(x){
+      x = x||{};
+      return { state: STATES.indexOf(x.state)>=0 ? x.state : 'slow',
+               water: [0,1,2,3].indexOf(x.water)>=0 ? x.water : 1,
+               tasks: Array.isArray(x.tasks) ? x.tasks.filter(function(t){return TASKS.indexOf(t)>=0;}) : [],
+               note: typeof x.note==='string' ? x.note : '' };
+    });
+  });
+  return d;
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(KEY);
+    if(raw){ var d = JSON.parse(raw); if(valid(d)) return normalize(d); }
+  }catch(e){}
+  return seed();
+}
+var storeFailed = false;
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(db)); storeFailed=false; }
+  catch(e){ storeFailed=true; }
+}
+
+var db = load();
+var ui = { tab:'now', month:new Date().getMonth(), group:null, edit:null, msg:'' };
+var NOW = new Date().getMonth();
+
+function t(k){ return T[db.lang][k]; }
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function byId(id){ for(var i=0;i<db.groups.length;i++) if(db.groups[i].id===id) return db.groups[i]; return null; }
+function dots(n){ return '<span class="dots" aria-hidden="true">' + '●●●'.slice(0,n) + '○○○'.slice(0,3-n) + '</span>'; }
+
+function monthBody(md){
+  var h = '<div class="row"><span class="badge '+md.state+'">'+t(md.state)+'</span>' +
+          '<span class="water">'+t('water')+' <b>'+t('w'+md.water)+'</b>'+dots(md.water)+'</span></div>';
+  if(md.tasks.length){
+    h += '<div class="row">' + md.tasks.map(function(k){ return '<span class="chip">'+t(k)+'</span>'; }).join('') + '</div>';
+  }
+  if(md.note) h += '<div class="note">'+esc(md.note)+'</div>';
+  return h;
+}
+
+function viewNow(){
+  var mi = ui.month, h = '';
+  h += '<div class="monthbar"><button class="rnd" data-act="prev" aria-label="prev">‹</button>' +
+       '<div class="m">'+t('months')[mi]+(mi===NOW?'<small>'+t('thisMonth')+'</small>':'')+'</div>' +
+       '<button class="rnd" data-act="next" aria-label="next">›</button></div>';
+  if(!db.groups.length) return h + '<div class="empty">'+t('empty')+'</div>';
+  db.groups.forEach(function(g){
+    h += '<button class="card" data-act="edit" data-g="'+g.id+'" data-m="'+mi+'">' +
+         '<div class="row" style="margin-top:0"><span class="nm">'+esc(g.name)+'</span>' +
+         (g.minTemp!=='' ? '<span class="temp">'+t('minTemp')+' '+esc(g.minTemp)+'℃</span>' : '') + '</div>' +
+         monthBody(g.months[mi]) + '</button>';
+  });
+  return h;
+}
+
+function viewYear(){
+  if(!db.groups.length) return '<div class="empty">'+t('empty')+'</div>';
+  if(!byId(ui.group)) ui.group = db.groups[0].id;
+  var sh = t('short'), h = '<h2 style="margin-top:0">'+t('overview')+'</h2><table class="mx"><tr><th></th>';
+  for(var i=0;i<12;i++) h += '<th class="'+(i===NOW?'cur':'')+'">'+sh[i]+'</th>';
+  h += '</tr>';
+  db.groups.forEach(function(g){
+    h += '<tr class="'+(g.id===ui.group?'sel':'')+'" data-act="pick" data-g="'+g.id+'"><td class="g">'+esc(g.name)+'</td>';
+    g.months.forEach(function(md,i){
+      h += '<td class="c '+md.state+(i===NOW?' cur':'')+'">'+t(md.state.charAt(0)+'1')+'</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</table><div class="legend"><span>'+t('g1')+' = '+t('grow')+'</span><span>'+t('s1')+' = '+t('slow')+'</span><span>'+t('r1')+' = '+t('rest')+'</span></div>';
+  var g = byId(ui.group);
+  h += '<h2>'+esc(g.name)+' — '+t('detail')+'</h2>';
+  g.months.forEach(function(md,i){
+    h += '<button class="mrow'+(i===NOW?' cur':'')+'" data-act="edit" data-g="'+g.id+'" data-m="'+i+'">' +
+         '<span class="mn">'+(db.lang==='ja'?t('months')[i]:t('months')[i].slice(0,3))+'</span><span class="bd">'+monthBody(md)+'</span></button>';
+  });
+  return h;
+}
+
+function viewSet(){
+  var h = '<h2 style="margin-top:0">'+t('lang')+'</h2><div class="seg">' +
+    '<button data-act="lang" data-v="ja" class="'+(db.lang==='ja'?'on':'')+'">日本語</button>' +
+    '<button data-act="lang" data-v="en" class="'+(db.lang==='en'?'on':'')+'">English</button></div>';
+  h += '<h2>'+t('groups')+'</h2><p class="hint">'+t('seedHint')+'</p>';
+  db.groups.forEach(function(g){
+    h += '<div class="grp"><input type="text" data-f="name" data-g="'+g.id+'" value="'+esc(g.name)+'" aria-label="'+t('name')+'">' +
+         '<div class="line"><label>'+t('minTempL')+'</label><input type="number" inputmode="decimal" data-f="minTemp" data-g="'+g.id+'" value="'+esc(g.minTemp)+'">' +
+         '<span style="flex:1"></span><button class="btn" data-act="dup" data-g="'+g.id+'">'+t('dup')+'</button>' +
+         '<button class="btn dng" data-act="del" data-g="'+g.id+'">'+t('del')+'</button></div></div>';
+  });
+  h += '<button class="btn full" data-act="add">+ '+t('add')+'</button>';
+  h += '<h2>'+t('backup')+'</h2>' +
+       '<button class="btn pri full" data-act="export">'+t('exportB')+'</button>' +
+       '<button class="btn full" data-act="import">'+t('importB')+'</button>' +
+       '<div class="msg" id="msg">'+esc(ui.msg)+'</div>' +
+       '<button class="btn dng full" data-act="reset">'+t('reset')+'</button>';
+  return h;
+}
+
+function renderSheet(){
+  var box = document.getElementById('sheet');
+  if(!ui.edit){ box.innerHTML=''; return; }
+  var g = byId(ui.edit.g); if(!g){ ui.edit=null; box.innerHTML=''; return; }
+  var md = g.months[ui.edit.m];
+  var h = '<div class="sheetbg" data-act="bg"><div class="sheet" role="dialog" aria-modal="true">' +
+    '<h3>'+esc(g.name)+'</h3><div class="sub">'+t('months')[ui.edit.m]+'</div>' +
+    '<div class="field"><label>'+t('state')+'</label><div class="seg">' +
+      STATES.map(function(s){ return '<button data-act="setState" data-v="'+s+'" class="'+(md.state===s?'on':'')+'">'+t(s)+'</button>'; }).join('') + '</div></div>' +
+    '<div class="field"><label>'+t('water')+'</label><div class="seg">' +
+      [0,1,2,3].map(function(w){ return '<button data-act="setWater" data-v="'+w+'" class="'+(md.water===w?'on':'')+'">'+t('w'+w)+'</button>'; }).join('') + '</div></div>' +
+    '<div class="field"><label>'+t('tasks')+'</label><div class="seg wrap">' +
+      TASKS.map(function(k){ return '<button data-act="task" data-v="'+k+'" class="'+(md.tasks.indexOf(k)>=0?'on':'')+'">'+t(k)+'</button>'; }).join('') + '</div></div>' +
+    '<div class="field"><label for="noteIn">'+t('note')+'</label><textarea id="noteIn" placeholder="'+t('notePh')+'">'+esc(md.note)+'</textarea></div>' +
+    '<button class="btn pri full" data-act="closeSheet">'+t('close')+'</button></div></div>';
+  box.innerHTML = h;
+}
+
+function render(){
+  document.documentElement.lang = db.lang;
+  document.getElementById('tagline').textContent = t('tagline') + (storeFailed ? ' — ' + t('storeErr') : '');
+  var tabs = [['now','tabNow'],['year','tabYear'],['set','tabSet']];
+  document.getElementById('tabs').innerHTML = tabs.map(function(x){
+    return '<button data-tab="'+x[0]+'" class="'+(ui.tab===x[0]?'on':'')+'">'+t(x[1])+'</button>'; }).join('');
+  document.getElementById('app').innerHTML = ui.tab==='now' ? viewNow() : ui.tab==='year' ? viewYear() : viewSet();
+  renderSheet();
+}
+
+function exportBackup(){
+  var d = new Date(), p = function(n){ return (n<10?'0':'')+n; };
+  var name = 'eq-calendar-backup-' + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + '.json';
+  var blob = new Blob([JSON.stringify(db,null,2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+  ui.msg = t('saved') + ': ' + name; render();
+}
+
+document.getElementById('file').addEventListener('change', function(e){
+  var f = e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    var d = null; try{ d = JSON.parse(r.result); }catch(err){}
+    if(!valid(d)){ ui.msg = t('badFile'); render(); return; }
+    if(!confirm(t('confirmImport'))) return;
+    db = normalize(d); save(); ui.group=null; ui.msg = t('restored'); render();
+  };
+  r.readAsText(f);
+});
+
+document.getElementById('tabs').addEventListener('click', function(e){
+  var b = e.target.closest('[data-tab]'); if(!b) return;
+  ui.tab = b.getAttribute('data-tab'); ui.msg=''; render(); window.scrollTo(0,0);
+});
+
+document.getElementById('app').addEventListener('click', function(e){
+  var el = e.target.closest('[data-act]'); if(!el) return;
+  var act = el.getAttribute('data-act'), gid = el.getAttribute('data-g'), g = gid ? byId(gid) : null;
+  if(act==='prev'){ ui.month=(ui.month+11)%12; }
+  else if(act==='next'){ ui.month=(ui.month+1)%12; }
+  else if(act==='edit'){ ui.edit={g:gid, m:+el.getAttribute('data-m')}; }
+  else if(act==='pick'){ ui.group=gid; }
+  else if(act==='lang'){ db.lang=el.getAttribute('data-v'); save(); }
+  else if(act==='add'){ db.groups.push({id:uid(), name:t('newName'), minTemp:'', months:Array.apply(null,Array(12)).map(function(){return m('slow',1,[],'');})}); save(); }
+  else if(act==='dup' && g){ var c=JSON.parse(JSON.stringify(g)); c.id=uid(); c.name=g.name+t('copyOf'); db.groups.splice(db.groups.indexOf(g)+1,0,c); save(); }
+  else if(act==='del' && g){ if(!confirm(t('confirmDel'))) return; db.groups.splice(db.groups.indexOf(g),1); save(); }
+  else if(act==='export'){ exportBackup(); return; }
+  else if(act==='import'){ document.getElementById('file').click(); return; }
+  else if(act==='reset'){ if(!confirm(t('confirmReset'))) return; var lang=db.lang; db=seed(); db.lang=lang; save(); ui.group=null; }
+  render();
+});
+
+document.getElementById('app').addEventListener('input', function(e){
+  var f = e.target.getAttribute('data-f'); if(!f) return;
+  var g = byId(e.target.getAttribute('data-g')); if(!g) return;
+  g[f] = e.target.value; save();
+});
+
+document.getElementById('sheet').addEventListener('click', function(e){
+  if(!ui.edit) return;
+  var el = e.target.closest('[data-act]'); if(!el) return;
+  var act = el.getAttribute('data-act'), v = el.getAttribute('data-v');
+  var g = byId(ui.edit.g); if(!g) return;
+  var md = g.months[ui.edit.m];
+  if(act==='bg'){ if(e.target!==el) return; ui.edit=null; }
+  else if(act==='closeSheet'){ ui.edit=null; }
+  else if(act==='setState'){ md.state=v; }
+  else if(act==='setWater'){ md.water=+v; }
+  else if(act==='task'){ var i=md.tasks.indexOf(v); if(i>=0) md.tasks.splice(i,1); else { md.tasks.push(v); md.tasks.sort(function(a,b){return TASKS.indexOf(a)-TASKS.indexOf(b);}); } }
+  save(); render();
+});
+document.getElementById('sheet').addEventListener('input', function(e){
+  if(e.target.id!=='noteIn' || !ui.edit) return;
+  var g = byId(ui.edit.g); if(!g) return;
+  g.months[ui.edit.m].note = e.target.value; save();
+});
+
+render();
+</script>
+</body>
+</html>
